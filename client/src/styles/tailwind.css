@@ -1,0 +1,41 @@
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+
+/*tailwind custom classes*/
+@layer utilities {
+  .text-p-blue {
+    @apply text-blue-700;
+  }
+  
+  .bg-p-blue {
+    @apply bg-blue-700;
+  }
+
+  .border-p-blue {
+    @apply border-blue-700;
+  }
+
+  @variants hover {
+    .bg-p-lightBlue {
+      @apply bg-blue-600;
+    }
+
+    .border-p-lightBlue {
+      @apply border-blue-600;
+    }
+  }
+
+  @variants disabled {
+    .bg-p-superLightBlue {
+      background-color: #0080ff;
+    }
+
+    .disable-cursor {
+      cursor: not-allowed;
+    }
+  }
+}
