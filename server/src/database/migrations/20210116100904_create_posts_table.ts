@@ -2,21 +2,20 @@ import * as Knex from 'knex';
 import { shortID, timestamps, UuidPrimaryKey } from '../knexFunctions/index.knexFunctions';
 
 export async function up(knex: Knex): Promise<void> {
-  return knex.schema.createTable('subs', (t) => {
+  return await knex.schema.createTable('posts', (t) => {
     UuidPrimaryKey(t, knex);
     shortID(t);
-    t.string('name').unique().index().notNullable();
     t.string('title').notNullable();
-    t.string('description').notNullable();
-    t.string('image_urn').notNullable().defaultTo('defaultSubImage.png');
-    t.string('banner_urn').nullable();
+    t.string('slug').notNullable();
+    t.text('body').nullable();
+    t.integer('vote_count').notNullable().defaultTo(0);
     timestamps(t);
 
-    //foreign keys
     t.string('username').references('username').inTable('users').notNullable().onDelete('CASCADE');
+    t.string('sub_name').references('name').inTable('subs').notNullable().onDelete('CASCADE');
   });
 }
 
 export async function down(knex: Knex): Promise<void> {
-  return knex.schema.dropTable('subs');
+  return await knex.schema.dropTable('posts');
 }

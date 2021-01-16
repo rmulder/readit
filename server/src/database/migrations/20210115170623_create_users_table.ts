@@ -1,12 +1,14 @@
 import * as Knex from 'knex';
+import { shortID, timestamps, UuidPrimaryKey } from '../knexFunctions/index.knexFunctions';
 
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('users', (t) => {
-    t.uuid('id').primary().index().defaultTo(knex.raw('uuid_generate_v4()'));
+    UuidPrimaryKey(t, knex);
+    shortID(t);
     t.string('username').unique().index().notNullable();
     t.string('email').unique().index().notNullable();
     t.string('password').notNullable();
-    t.timestamps(true, true);
+    timestamps(t);
   });
 }
 

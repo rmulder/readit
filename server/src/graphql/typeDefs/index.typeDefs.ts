@@ -2,11 +2,11 @@ import { gql } from 'apollo-server-express';
 import subTypeDefs from './sub.typeDefs';
 
 const defaultTypeDefs = gql`
-  scalar DateTime
-  
   type Query {
     _empty: String!
   }
+
+  scalar DateTime
 `;
 
 const typeDefs = [defaultTypeDefs, subTypeDefs];
