@@ -1,12 +1,12 @@
 import { nanoid } from 'nanoid';
-import bcrypt from 'bcrypt';
+import jwt, { SignOptions } from 'jsonwebtoken';
 
 export const generateShortID = () => {
   return nanoid();
 };
 
-export const hashPassword = async (plainPassword: string) => {
-  const salt = await bcrypt.genSalt();
+export const generateAccessToken = (payload: {}, secret: string, options: SignOptions) => {
+  const token = jwt.sign(payload, secret, options);
 
-  return await bcrypt.hash(plainPassword, salt);
+  return token;
 };
