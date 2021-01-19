@@ -8,6 +8,7 @@ import { generateAccessToken, generateShortID } from '../../utilities/stringFunc
 import { hashPassword, comparePassword } from '../../utilities/passwordHasher.utils';
 import { SignOptions } from 'jsonwebtoken';
 import { Request, Response } from 'express';
+import { validateInput } from './../../utilities/inputValidator.utils';
 
 interface IRegisterArgs {
   registerInput: {
@@ -30,14 +31,17 @@ interface IContext {
   res: Response;
 }
 
-//TODO: Validate input like is password more than 6 chars
-//TODO: Make sure the username is lowercase when searching the database
-const login = async (_: any, args: ILoginArgs, context: IContext) => {
+//TODO: Maby set up a stronger password policy
+const login = async (_: any, { loginInput }: ILoginArgs, { res }: IContext) => {
   try {
-    const { res } = context;
-    const { username, password } = args.loginInput;
+    const { isValid, errorMessage } = validateInput(loginInput, { username: 'required', password: 'required|min:6' });
+    if (!isValid) throw new CustomError(400, errorMessage!);
 
-    const userWithUsername = await knex('users').select().where({ username }).first();
+    const { username, password } = loginInput;
+
+    const usernameLower = username.toLowerCase();
+
+    const userWithUsername = await knex('users').select().where({ username: usernameLower }).first();
     if (!userWithUsername) throw new CustomError(400, 'invalid credentials');
 
     const passwordIsValid = await comparePassword(password, userWithUsername.password);
@@ -70,24 +74,31 @@ const login = async (_: any, args: ILoginArgs, context: IContext) => {
   }
 };
 
-//TODO: Validate input like is password more than 6 chars, is email a valid email etc
-//TODO: make sure username and email is stored in database as lowercase. Also make sure the inputs are lowercase when searching the database
-const register = async (_: any, args: IRegisterArgs, context: IContext) => {
+const register = async (_: any, { registerInput }: IRegisterArgs, { res }: IContext) => {
   try {
-    const { res } = context;
-    const { username, email, password, confirmPassword } = args.registerInput;
+    const { isValid, errorMessage } = validateInput(registerInput, {
+      username: 'required',
+      email: 'required|email',
+      password: 'required|min:6',
+      confirmPassword: 'required|min:6|same:password',
+    });
+    if (!isValid) throw new CustomError(400, errorMessage!);
 
-    const userWithUsername = await knex('users').select().where({ username }).first();
+    const { username, email, password } = registerInput;
+    const usernameLower = username.toLowerCase();
+    const emailLower = email.toLowerCase();
+
+    const userWithUsername = await knex('users').select().where({ username: usernameLower }).first();
     if (userWithUsername) throw new CustomError(400, 'username already taken');
 
-    const userWithEmail = await knex('users').select().where({ email }).first();
+    const userWithEmail = await knex('users').select().where({ email: emailLower }).first();
     if (userWithEmail) throw new CustomError(400, 'email already in use');
 
     //passed all validation checks
     const hashedPassword = await hashPassword(password);
     const shortID = generateShortID();
 
-    const savedUser = await knex('users').insert({ short_id: shortID, username, email, password: hashedPassword }, '*');
+    const savedUser = await knex('users').insert({ short_id: shortID, username: usernameLower, email: emailLower, password: hashedPassword }, '*');
 
     const payload = {
       short_id: shortID,
@@ -115,11 +126,9 @@ const register = async (_: any, args: IRegisterArgs, context: IContext) => {
 };
 
 const userResolvers = {
-  Query: {
-    login,
-  },
   Mutation: {
     register,
+    login,
   },
 };
 

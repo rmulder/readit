@@ -1,23 +1,27 @@
-import { FetchResult, useMutation } from '@apollo/client';
-import { useRouter } from 'next/router';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useAuthDispatch } from '../../context/auth.context';
-import { LOGIN_USER } from '../../graphql/mutations/user.mutations';
-import { delay } from '../../utils/delay.utils';
-import { passwordOptions, usernameOptions } from '../../validation-rules/auth.validation-rules';
 import FormButton from '../buttons/FormButton.component';
 import InputGroup from './InputGroup.component';
 import ValidationError from './ValidationError.component';
+
+import { useMutation } from '@apollo/client';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { LOGIN_USER } from '../../graphql/mutations/user.mutations';
+import { delay } from '../../utils/delay.utils';
+import { passwordOptions, usernameOptions } from '../../validation-rules/auth.validation-rules';
+import { useAuthDispatch } from '../../hooks/auth.hooks';
 
 interface IFormData {
   username: string;
   password: string;
 }
 
-interface ILoginData {
-  username: string;
-  email: string;
+interface ILoginMutationReturnData {
+  login: {
+    short_id: string;
+    username: string;
+    email: string;
+  };
 }
 
 const LoginForm = () => {
@@ -28,16 +32,19 @@ const LoginForm = () => {
 
   const [loading, setLoading] = useState(false);
 
-  const [login] = useMutation(LOGIN_USER);
+  const [login] = useMutation<ILoginMutationReturnData>(LOGIN_USER);
 
   const submit = async (formData: IFormData) => {
     try {
       setLoading(true);
       await delay(2000);
 
-      const data = await login({ variables: { ...formData } });
+      const result = await login({ variables: { loginInput: { ...formData } } });
 
-      dispatch({ type: 'LOGIN', payload: { username: data.data.login.username, email: data.data.login.email } });
+      const returnData = result.data?.login;
+
+      dispatch({ type: 'LOGIN', payload: { short_id: returnData?.short_id, username: returnData?.username, email: returnData?.email } });
+
       setLoading(false);
 
       router.push('/');
@@ -65,6 +72,7 @@ const LoginForm = () => {
         name='password'
         register={register(passwordOptions)}
       />
+
       {errors.password && <ValidationError errorMessage={errors.password.message!} />}
 
       <FormButton text='Login' type='submit' loading={loading} />

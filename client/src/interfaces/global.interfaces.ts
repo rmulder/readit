@@ -17,6 +17,7 @@ export interface IPost {
 }
 
 export interface IUser {
+  short_id: string;
   username: string;
   email: string;
 }

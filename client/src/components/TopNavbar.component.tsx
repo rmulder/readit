@@ -1,14 +1,14 @@
-import { useAuthDispatch, useAuthState } from '../context/auth.context';
-
 import Link from 'next/link';
 import LinkButton from './buttons/LinkButton.component';
 import RedditLogo from '../../public/images/reddit-logo.svg';
+
+import { useAuthDispatch, useAuthState } from '../hooks/auth.hooks';
 import { useLazyQuery } from '@apollo/client';
 import { LOGOUT_USER } from '../graphql/queries/user.queries';
 import { delay } from '../utils/delay.utils';
 
 const TopNavbar = () => {
-  const { authenticated } = useAuthState();
+  const { authenticated, user } = useAuthState();
   const dispatch = useAuthDispatch();
 
   const [logout] = useLazyQuery(LOGOUT_USER);
@@ -42,7 +42,12 @@ const TopNavbar = () => {
       </div>
 
       <div className='flex p-2'>
-        {authenticated && <button onClick={handleLogout}>Logout</button>}
+        {authenticated && (
+          <>
+            <span className='pr-2'>Welcome {user?.username}</span>
+            <button onClick={handleLogout}>Logout</button>
+          </>
+        )}
 
         {!authenticated && (
           <>

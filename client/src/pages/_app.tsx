@@ -2,7 +2,7 @@ import '../styles/tailwind.css';
 import 'react-toastify/dist/ReactToastify.css';
 import { ApolloClient, InMemoryCache, ApolloProvider, createHttpLink } from '@apollo/client';
 import { AppProps } from 'next/dist/next-server/lib/router/router';
-import { AuthProvider } from '../context/auth.context';
+import AuthProvider from '../context/auth.context';
 
 const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),

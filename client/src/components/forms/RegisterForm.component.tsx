@@ -1,3 +1,7 @@
+import FormButton from '../buttons/FormButton.component';
+import InputGroup from './InputGroup.component';
+import ValidationError from './ValidationError.component';
+
 import { useMutation } from '@apollo/client';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
@@ -5,23 +9,29 @@ import { useForm } from 'react-hook-form';
 import { REGISTER_USER } from '../../graphql/mutations/user.mutations';
 import { delay } from '../../utils/delay.utils';
 import { emailOptions, passwordOptions, usernameOptions } from '../../validation-rules/auth.validation-rules';
-import FormButton from '../buttons/FormButton.component';
-import InputGroup from './InputGroup.component';
-import ValidationError from './ValidationError.component';
+import { useAuthDispatch } from '../../hooks/auth.hooks';
 
 interface IFormData {
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
+}
+
+interface IRegisterMutationReturnData {
+  register: {
+    short_id: string;
+    username: string;
+    email: string;
+  };
 }
 
 const RegisterForm = () => {
   const router = useRouter();
-  const { register, handleSubmit, errors } = useForm<IFormData>();
-
+  const dispatch = useAuthDispatch();
   const [loading, setLoading] = useState(false);
-
-  const [registerUser] = useMutation(REGISTER_USER);
+  const [registerUser] = useMutation<IRegisterMutationReturnData>(REGISTER_USER);
+  const { register, handleSubmit, errors, watch } = useForm<IFormData>();
 
   const submit = async (formData: IFormData) => {
     try {
@@ -29,10 +39,12 @@ const RegisterForm = () => {
 
       await delay(2000);
 
-      await registerUser({ variables: { ...formData } });
+      const result = await registerUser({ variables: { registerInput: { ...formData } } });
+      const returnData = result.data?.register;
 
+      dispatch({ type: 'LOGIN', payload: { short_id: returnData?.short_id, username: returnData?.username, email: returnData?.email } });
       setLoading(false);
-      router.push('/account/login');
+      router.push('/');
     } catch (err) {
       console.log(err);
       setLoading(false);
@@ -61,6 +73,27 @@ const RegisterForm = () => {
         register={register(passwordOptions)}
       />
       {errors.password && <ValidationError errorMessage={errors.password.message!} />}
+
+      <InputGroup
+        wrapperClassname={errors.confirmPassword ? '' : 'mb-2'}
+        type='password'
+        placeholder='Confirm Password'
+        name='confirmPassword'
+        register={register({
+          required: {
+            value: true,
+            message: 'please confirm your password',
+          },
+          minLength: {
+            value: 6,
+            message: 'password must be at least 6 characters',
+          },
+          validate: (confirmPasswordValue) => {
+            return confirmPasswordValue === watch('password') || 'passwords do not match';
+          },
+        })}
+      />
+      {errors.confirmPassword && <ValidationError errorMessage={errors.confirmPassword.message!} />}
 
       <FormButton text='Register' type='submit' loading={loading} />
     </form>

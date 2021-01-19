@@ -1,9 +1,8 @@
-import { Dispatch, createContext, useContext, useEffect, useReducer } from 'react';
+import { Dispatch, createContext, useContext, useReducer } from 'react';
 
 import { IUser } from '../interfaces/global.interfaces';
-import { readitAxios } from '../configs/axios.config';
 
-interface IState {
+interface IAuthState {
   authenticated: boolean;
   user?: IUser;
 }
@@ -13,13 +12,12 @@ interface IAction {
   payload?: any;
 }
 
-const StateContext = createContext<IState>({ authenticated: false, user: undefined });
-const DispatchContext = createContext<Dispatch<IAction>>(null!);
+export const AuthContext = createContext<IAuthState>({ authenticated: false, user: undefined });
+export const AuthDispatchContext = createContext<Dispatch<IAction>>(null!);
 
-export const useAuthState = () => useContext(StateContext);
-export const useAuthDispatch = () => useContext(DispatchContext);
+const authReducer = (state: IAuthState, action: IAction) => {
+  const { type, payload } = action;
 
-const reducer = (state: IState, { type, payload }: IAction) => {
   switch (type) {
     case 'LOGIN':
       return {
@@ -40,22 +38,17 @@ const reducer = (state: IState, { type, payload }: IAction) => {
   }
 };
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [state, dispatch] = useReducer(reducer, {
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, dispatch] = useReducer(authReducer, {
     authenticated: false,
     user: undefined,
   });
 
-  useEffect(() => {
-    readitAxios
-      .get('/auth/profile')
-      .then((response) => dispatch({ type: 'LOGIN', payload: response.data.results }))
-      .catch((err) => {});
-  }, []);
-
   return (
-    <DispatchContext.Provider value={dispatch}>
-      <StateContext.Provider value={state}>{children}</StateContext.Provider>
-    </DispatchContext.Provider>
+    <AuthDispatchContext.Provider value={dispatch}>
+      <AuthContext.Provider value={state}>{children}</AuthContext.Provider>
+    </AuthDispatchContext.Provider>
   );
 };
+
+export default AuthProvider;
