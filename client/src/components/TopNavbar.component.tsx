@@ -2,14 +2,16 @@ import Link from 'next/link';
 import LinkButton from './buttons/LinkButton.component';
 import RedditLogo from '../../public/images/reddit-logo.svg';
 
-import { useAuthDispatch, useAuthState } from '../hooks/auth.hooks';
 import { useLazyQuery } from '@apollo/client';
 import { LOGOUT_USER } from '../graphql/queries/user.queries';
 import { delay } from '../utils/delay.utils';
+import { useDispatch, useSelector } from 'react-redux';
+import { IAppState } from '../redux/store.redux';
+import { logout as logoutAction } from '../redux/actions/auth.actions';
 
 const TopNavbar = () => {
-  const { authenticated, user } = useAuthState();
-  const dispatch = useAuthDispatch();
+  const { authenticated, user } = useSelector((state: IAppState) => state.auth);
+  const dispatch = useDispatch();
 
   const [logout] = useLazyQuery(LOGOUT_USER);
 
@@ -17,7 +19,7 @@ const TopNavbar = () => {
     await delay(2000);
     logout();
 
-    dispatch({ type: 'LOGOUT' });
+    dispatch(logoutAction());
   };
 
   return (

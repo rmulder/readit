@@ -8,8 +8,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { REGISTER_USER } from '../../graphql/mutations/user.mutations';
 import { delay } from '../../utils/delay.utils';
-import { emailOptions, passwordOptions, usernameOptions } from '../../validation-rules/auth.validation-rules';
-import { useAuthDispatch } from '../../hooks/auth.hooks';
+import { emailOptions, passwordOptions, usernameOptions } from '../../utils/validation-rules/auth.validation-rules';
+import { login } from '../../redux/actions/auth.actions';
+import { IUser } from '../../interfaces/global.interfaces';
+import { useDispatch } from 'react-redux';
 
 interface IFormData {
   username: string;
@@ -19,16 +21,12 @@ interface IFormData {
 }
 
 interface IRegisterMutationReturnData {
-  register: {
-    short_id: string;
-    username: string;
-    email: string;
-  };
+  register: IUser;
 }
 
 const RegisterForm = () => {
   const router = useRouter();
-  const dispatch = useAuthDispatch();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [registerUser] = useMutation<IRegisterMutationReturnData>(REGISTER_USER);
   const { register, handleSubmit, errors, watch } = useForm<IFormData>();
@@ -42,7 +40,7 @@ const RegisterForm = () => {
       const result = await registerUser({ variables: { registerInput: { ...formData } } });
       const returnData = result.data?.register;
 
-      dispatch({ type: 'LOGIN', payload: { short_id: returnData?.short_id, username: returnData?.username, email: returnData?.email } });
+      dispatch(login(returnData!));
       setLoading(false);
       router.push('/');
     } catch (err) {

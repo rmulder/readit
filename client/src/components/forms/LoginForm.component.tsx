@@ -8,8 +8,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { LOGIN_USER } from '../../graphql/mutations/user.mutations';
 import { delay } from '../../utils/delay.utils';
-import { passwordOptions, usernameOptions } from '../../validation-rules/auth.validation-rules';
-import { useAuthDispatch } from '../../hooks/auth.hooks';
+import { passwordOptions, usernameOptions } from '../../utils/validation-rules/auth.validation-rules';
+import { login as loginAction } from '../../redux/actions/auth.actions';
+import { useDispatch } from 'react-redux';
+import { IUser } from '../../interfaces/global.interfaces';
 
 interface IFormData {
   username: string;
@@ -17,15 +19,11 @@ interface IFormData {
 }
 
 interface ILoginMutationReturnData {
-  login: {
-    short_id: string;
-    username: string;
-    email: string;
-  };
+  login: IUser;
 }
 
 const LoginForm = () => {
-  const dispatch = useAuthDispatch();
+  const dispatch = useDispatch();
 
   const router = useRouter();
   const { register, handleSubmit, errors } = useForm<IFormData>();
@@ -43,7 +41,7 @@ const LoginForm = () => {
 
       const returnData = result.data?.login;
 
-      dispatch({ type: 'LOGIN', payload: { short_id: returnData?.short_id, username: returnData?.username, email: returnData?.email } });
+      dispatch(loginAction(returnData!));
 
       setLoading(false);
 

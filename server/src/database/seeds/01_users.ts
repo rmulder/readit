@@ -1,5 +1,6 @@
 import * as Knex from 'knex';
-import { generateShortID, hashPassword } from '../../utilities/stringFunctions.utils';
+import { hashPassword } from '../../utilities/passwordHasher.utils';
+import { generateShortID } from '../../utilities/stringFunctions.utils';
 
 export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
